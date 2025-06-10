@@ -5,6 +5,7 @@
 #include "mcio.h"
 
 #include <cstdint>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -100,19 +101,17 @@ void setCardSpecs(const mcfat_cardspecs_t cardspecs) {
 
 emscripten::val getInfo() {
     int pagesize, blocksize, cardsize, cardflags;
-    int return_code = mcio_mcGetInfo(&pagesize, &blocksize, &cardsize, &cardflags);
+    int code = mcio_mcGetInfo(&pagesize, &blocksize, &cardsize, &cardflags);
 
     emscripten::val ret = emscripten::val::object();
-    ret.set("returnCode", return_code);
-
-    if (return_code == sceMcResSucceed) {
+    if (code == sceMcResSucceed) {
         emscripten::val data = emscripten::val().object();
-        data.set("pageSize", pagesize);
-        data.set("blockSize", blocksize);
-        data.set("cardSize", cardsize);
-        data.set("cardFlags", cardflags);
-
-        ret.set("data", data);
+        ret.set("pageSize", pagesize);
+        ret.set("blockSize", blocksize);
+        ret.set("cardSize", cardsize);
+        ret.set("cardFlags", cardflags);
+    } else {
+        ret.set("code", code);
     }
 
     return ret;
@@ -120,16 +119,13 @@ emscripten::val getInfo() {
 
 emscripten::val getAvailableSpace() {
     int cardfree;
-    int return_code = mcio_mcGetAvailableSpace(&cardfree);
+    int code = mcio_mcGetAvailableSpace(&cardfree);
 
     emscripten::val ret = emscripten::val::object();
-    ret.set("returnCode", return_code);
-
-    if (return_code == sceMcResSucceed) {
-        emscripten::val data = emscripten::val().object();
-        data.set("availableSpace", cardfree);
-
-        ret.set("data", data);
+    if (code == sceMcResSucceed) {
+        ret.set("availableSpace", cardfree);
+    } else {
+        ret.set("code", code);
     }
 
     return ret;
@@ -143,18 +139,13 @@ emscripten::val readFile(int fd, int length) {
     emscripten::val ret = emscripten::val::object();
 
     std::vector<uint8_t> buffer = std::vector<uint8_t>(length);
-    int return_code = mcio_mcRead(fd, buffer.data(), buffer.size());
-    if (return_code < 0) {
-        ret.set("returnCode", return_code);
-        return ret;
+    int code = mcio_mcRead(fd, buffer.data(), buffer.size());
+    if (code < 0) {
+        ret.set("code", code);
+    } else {
+        ret.set("data", emscripten::val::array(buffer));
     }
 
-    if (return_code != length) {
-        ret.set("returnCode", sceMcResFailIO);
-        return ret;
-    }
-
-    ret.set("data", emscripten::val::array(buffer));
     return ret;
 }
 
@@ -175,43 +166,14 @@ int openDirectory(std::string dirname) {
 emscripten::val readDirectory(int fd) {
     emscripten::val ret = emscripten::val::object();
     io_dirent dirent;
-    int return_code = mcio_mcDread(fd, &dirent);
-    if (return_code < 0) {
-        ret.set("returnCode", return_code);
-        return ret;
+    int code = mcio_mcDread(fd, &dirent);
+    if (code < 0) {
+        ret.set("code", code);
+    } else {
+        ret.set("hasMore", code == 1);
+        ret.set("stat", dirent.stat);
+        ret.set("name", dirent.name);
     }
-
-    emscripten::val ctime = emscripten::val::object();
-    ctime.set("resv2", dirent.stat.ctime.Resv2);
-    ctime.set("sec", dirent.stat.ctime.Sec);
-    ctime.set("min", dirent.stat.ctime.Min);
-    ctime.set("hour", dirent.stat.ctime.Hour);
-    ctime.set("day", dirent.stat.ctime.Day);
-    ctime.set("month", dirent.stat.ctime.Month);
-    ctime.set("year", dirent.stat.ctime.Year);
-
-    emscripten::val mtime = emscripten::val::object();
-    mtime.set("resv2", dirent.stat.mtime.Resv2);
-    mtime.set("sec", dirent.stat.mtime.Sec);
-    mtime.set("min", dirent.stat.mtime.Min);
-    mtime.set("hour", dirent.stat.mtime.Hour);
-    mtime.set("day", dirent.stat.mtime.Day);
-    mtime.set("month", dirent.stat.mtime.Month);
-    mtime.set("year", dirent.stat.mtime.Year);
-
-
-    emscripten::val stat = emscripten::val::object();
-    stat.set("mode", dirent.stat.attr);
-    stat.set("attr", dirent.stat.attr);
-    stat.set("size", dirent.stat.size);
-    stat.set("ctime", ctime);
-    stat.set("mtime", mtime);
-
-    emscripten::val data = emscripten::val::object();
-    data.set("stat", stat);
-    data.set("name", dirent.name);
-
-    ret.set("data", data);
 
     return ret;
 }
@@ -223,20 +185,19 @@ int createDirectory(std::string dirname) {
 emscripten::val readPage(int pageIdx) {
     emscripten::val ret = emscripten::val::object();
     int pagesize, _blocksize, _cardsize, _cardflags;
-    int return_code = mcio_mcGetInfo(&pagesize, &_blocksize, &_cardsize, &_cardflags);
-    if (return_code < 0) {
-        ret.set("returnCode", return_code);
+    int code = mcio_mcGetInfo(&pagesize, &_blocksize, &_cardsize, &_cardflags);
+    if (code < 0) {
+        ret.set("code", code);
         return ret;
     }
 
     std::vector<uint8_t> page = std::vector<uint8_t>(pagesize);
-    return_code = mcio_mcReadPage(pageIdx, page.data());
-    if (return_code < 0) {
-        ret.set("returnCode", return_code);
-        return ret;
+    code = mcio_mcReadPage(pageIdx, page.data());
+    if (code < 0) {
+        ret.set("code", code);
+    } else {
+        ret.set("data", page);
     }
-
-    ret.set("page", page);
 
     return ret;
 }
@@ -257,10 +218,10 @@ EMSCRIPTEN_BINDINGS(mcfs) {
         .field("cardSize", &mcfat_cardspecs_t::cardsize)
         .field("cardFlags", &mcfat_cardspecs_t::flags);
 
-    emscripten::function("mcfatSetBuffer", &setBuffer);
-    emscripten::function("mcfatGetBuffer", &getBuffer);
-    emscripten::function("mcfatSetCardSpecs", &setCardSpecs);
-    emscripten::function("mcfatSetCardChanged", &mcfat_setCardChanged);
+    emscripten::function("setBuffer", &setBuffer);
+    emscripten::function("getBuffer", &getBuffer);
+    emscripten::function("setCardSpecs", &setCardSpecs);
+    emscripten::function("setCardChanged", &mcfat_setCardChanged);
 
     // mcio
     emscripten::value_object<sceMcStDateTime>("McStDateTime")
@@ -279,29 +240,29 @@ EMSCRIPTEN_BINDINGS(mcfs) {
         .field("ctime", &io_stat::ctime)
         .field("mtime", &io_stat::mtime);
 
-    emscripten::value_object<io_dirent>("McIoDirent")
-        .field("stat", &io_dirent::stat)
-        .field("name", &io_dirent::name)
-        .field("unknown", &io_dirent::unknown);
+    // returns just status code
+    emscripten::function("init", &mcio_init);
+    emscripten::function("detect", &mcio_mcDetect);
+    emscripten::function("close", &mcio_mcClose);
+    emscripten::function("createCrossLinkedFile", &createCrossLinkedFile);
+    emscripten::function("dclose", &mcio_mcDclose);
+    emscripten::function("unformat", &mcio_mcUnformat);
+    emscripten::function("format", &mcio_mcFormat);
+    emscripten::function("remove", &deleteFile);
+    emscripten::function("rmDir", &deleteDirectory);
 
-    emscripten::function("mcioInit", &mcio_init);
-    emscripten::function("mcioMcDetect", &mcio_mcDetect);
-    emscripten::function("mcioMcGetInfo", &getInfo);
-    emscripten::function("mcioMcGetAvailableSpace", &getAvailableSpace);
-    emscripten::function("mcioMcOpen", &openFile);
-    emscripten::function("mcioMcClose", &mcio_mcClose);
-    emscripten::function("mcioMcRead", &readFile);
-    emscripten::function("mcioMcWrite", &writeFile);
-    emscripten::function("mcioMcSeek", &mcio_mcSeek);
-    emscripten::function("mcioMcGetCluster", &mcio_mcGetCluster);
-    emscripten::function("mcioMcCreateCrossLinkedFile", &createCrossLinkedFile);
-    emscripten::function("mcioMcDopen", &openDirectory);
-    emscripten::function("mcioMcDclose", &mcio_mcDclose);
-    emscripten::function("mcioMcDread", &readDirectory);
-    emscripten::function("mcioMcMkDir", &createDirectory);
-    emscripten::function("mcioMcReadPage", &readPage);
-    emscripten::function("mcioMcUnformat", &mcio_mcUnformat);
-    emscripten::function("mcioMcFormat", &mcio_mcFormat);
-    emscripten::function("mcioMcRemove", &deleteFile);
-    emscripten::function("mcioMcRmDir", &deleteDirectory);
+    // returns status code (if <0) or data (if >=0)
+    emscripten::function("open", &openFile);
+    emscripten::function("write", &writeFile);
+    emscripten::function("seek", &mcio_mcSeek);
+    emscripten::function("getCluster", &mcio_mcGetCluster);
+    emscripten::function("dopen", &openDirectory);
+    emscripten::function("mkDir", &createDirectory);
+
+    // returns object with status code or status code and data
+    emscripten::function("getInfo", &getInfo);
+    emscripten::function("getAvailableSpace", &getAvailableSpace);
+    emscripten::function("read", &readFile);
+    emscripten::function("dread", &readDirectory);
+    emscripten::function("readPage", &readPage);
 }
