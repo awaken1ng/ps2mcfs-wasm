@@ -16,6 +16,6 @@ target_link_libraries(mcfs
         mcfat
 )
 
-set_target_properties(mcfs PROPERTIES LINK_FLAGS "-O3 -s WASM=1 -s MODULARIZE=1 --no-entry")
+set_target_properties(mcfs PROPERTIES LINK_FLAGS "-O3 -s WASM=1 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME=createModule --no-entry")
 
 configure_file(interface.d.ts mcfs.d.ts COPYONLY)

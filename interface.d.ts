@@ -75,4 +75,4 @@ export interface Module {
   readPage(pageIdx: number): McResultData;
 }
 
-export default function MainModuleFactory (options?: unknown): Promise<Module>;
+export default function createModule(options?: unknown): Promise<Module>
