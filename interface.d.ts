@@ -1,5 +1,3 @@
-type Uint8Buffer = ArrayBuffer | Uint8Array | Uint8ClampedArray
-
 export type McFatCardSpecs = {
   pageSize: number,
   blockSize: number,
@@ -46,7 +44,7 @@ export type McResultData = McResultCode | { data: Array<number> }
 export type McResultReadDir = McResultCode | McDirEntry
 
 export interface Module {
-  setBuffer(buffer: Uint8Buffer): void;
+  setBuffer(buffer: Uint8Array): void;
   getBuffer(): Array<number>;
   setCardSpecs(specs: McFatCardSpecs): void;
   setCardChanged(v: boolean): void;
@@ -62,7 +60,7 @@ export interface Module {
   rmDir(dirName: string): McReturnCode;
 
   open(fileName: string, flag: number): McReturnCode | McFileHandle;
-  write(fd: McFileHandle, data: Uint8Buffer): McReturnCode | number;
+  write(fd: McFileHandle, data: Uint8Array): McReturnCode | number;
   seek(fd: McFileHandle, offset: number, origin: SeekOrigin): McReturnCode | number;
   getCluster(fd: McFileHandle): McReturnCode | number;
   dopen(dirName: string): McReturnCode | McFileHandle;
