@@ -4,7 +4,7 @@ export type McFatCardSpecs = {
   pageSize: number,
   blockSize: number,
   cardSize: number,
-  cardFlags: number
+  cardFlags: number,
 }
 
 export type McStDateTime = {
@@ -14,7 +14,7 @@ export type McStDateTime = {
   hour: number,
   day: number,
   month: number,
-  year: number
+  year: number,
 }
 
 export type McIoStat = {
@@ -22,8 +22,14 @@ export type McIoStat = {
   attr: number,
   size: number,
   ctime: McStDateTime,
-  mtime: McStDateTime
+  mtime: McStDateTime,
 };
+
+export type McDirEntry = {
+  hasMore: boolean,
+  stat: McIoStat,
+  name: string,
+}
 
 export type McReturnCode = number
 export type McFileHandle = number
@@ -37,7 +43,7 @@ export type McResultCode = { code: number }
 export type McResultGetInfo = McResultCode | McFatCardSpecs
 export type McResultGetAvailableSpace = McResultCode | { availableSpace: number }
 export type McResultData = McResultCode | { data: Array<number> }
-export type McResultReadDir = McResultCode | { hasMore: boolean, stat: McIoStat, name: string }
+export type McResultReadDir = McResultCode | McDirEntry
 
 export interface Module {
   setBuffer(buffer: Uint8Buffer): void;
