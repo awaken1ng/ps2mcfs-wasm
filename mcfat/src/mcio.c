@@ -3427,8 +3427,8 @@ int mcio_mcGetAvailableSpace(int *cardfree)
         *cardfree = 0;
     else if (r < 0)
         return r;
-
-    *cardfree = r * MCIO_CLUSTERSIZE;
+    else
+        *cardfree = r * MCIO_CLUSTERSIZE;
 
     return 0;
 }
