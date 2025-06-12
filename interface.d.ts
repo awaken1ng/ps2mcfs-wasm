@@ -41,7 +41,7 @@ export enum SeekOrigin {
 export type McResultCode = { code: number }
 export type McResultGetInfo = McResultCode | McFatCardSpecs
 export type McResultGetAvailableSpace = McResultCode | { availableSpace: number }
-export type McResultData = McResultCode | { data: Array<number> }
+export type McResultData = McResultCode | { data: Uint8Array }
 export type McResultReadDir = McResultCode | McDirEntry
 
 export const sceMcResSucceed = 0
@@ -86,7 +86,7 @@ export const CF_ERASE_ZEROES = 0x10
 
 export interface Module {
   setCardBuffer(buffer: Uint8Array): void;
-  getCardBuffer(): Array<number>;
+  getCardBuffer(): Uint8Array;
   generateCardBuffer(): void;
   setCardSpecs(specs: McFatCardSpecs): void;
   setCardChanged(v: boolean): void;

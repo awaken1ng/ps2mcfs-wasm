@@ -19,7 +19,7 @@ void setCardBuffer(emscripten::val v) {
 }
 
 emscripten::val getCardBuffer() {
-    return emscripten::val().array(buffer);
+    return emscripten::val::global("Uint8Array").new_(emscripten::val::array(buffer));
 }
 
 void generateCardBuffer() {
@@ -157,7 +157,7 @@ emscripten::val readFile(int fd, int length) {
     if (code < 0) {
         ret.set("code", code);
     } else {
-        ret.set("data", emscripten::val::array(buffer));
+        ret.set("data", emscripten::val::global("Uint8Array").new_(emscripten::val::array(buffer)));
     }
 
     return ret;
