@@ -32,10 +32,11 @@ export type McDirEntry = {
 export type McReturnCode = number
 export type McFileHandle = number
 
-export type SeekSet = 0
-export type SeekCurrent = 1
-export type SeekEnd = 2
-export type SeekOrigin = SeekSet | SeekCurrent | SeekEnd
+export enum SeekOrigin {
+  Set = 0,
+  Current = 1,
+  End = 2,
+}
 
 export type McResultCode = { code: number }
 export type McResultGetInfo = McResultCode | McFatCardSpecs
