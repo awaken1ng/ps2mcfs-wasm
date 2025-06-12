@@ -14,7 +14,7 @@ std::vector<uint8_t> buffer;
 
 void setBuffer(emscripten::val v) {
     buffer = std::vector<uint8_t>(); // deallocate the existing buffer first
-    buffer = emscripten::vecFromJSArray<uint8_t>(v);
+    buffer = emscripten::convertJSArrayToNumberVector<uint8_t>(v);
 }
 
 emscripten::val getBuffer() {
