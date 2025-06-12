@@ -3,6 +3,7 @@
 
 #include "mcfat.h"
 #include "mcio.h"
+#include "cardgen.h"
 
 #include <cstdint>
 #include <stdbool.h>
@@ -12,13 +13,25 @@
 
 std::vector<uint8_t> buffer;
 
-void setBuffer(emscripten::val v) {
+void setCardBuffer(emscripten::val v) {
     buffer = std::vector<uint8_t>(); // deallocate the existing buffer first
     buffer = emscripten::convertJSArrayToNumberVector<uint8_t>(v);
 }
 
-emscripten::val getBuffer() {
+emscripten::val getCardBuffer() {
     return emscripten::val().array(buffer);
+}
+
+void generateCardBuffer() {
+    uint32_t cardSize = 8 * 1024 * 1024;
+
+    buffer = std::vector<uint8_t>(); // deallocate the existing buffer first
+    buffer.resize(cardSize);
+
+    for (size_t pos = 0; pos < cardSize; pos += BLOCK_SIZE) {
+        uint8_t *flushbuf = buffer.data() + pos;
+        genblock(cardSize, pos, flushbuf);
+    }
 }
 
 int page_erase(mcfat_cardspecs_t *specs, uint32_t page_idx) {
@@ -219,8 +232,9 @@ EMSCRIPTEN_BINDINGS(mcfs) {
         .field("cardSize", &mcfat_cardspecs_t::cardsize)
         .field("cardFlags", &mcfat_cardspecs_t::flags);
 
-    emscripten::function("setBuffer", &setBuffer);
-    emscripten::function("getBuffer", &getBuffer);
+    emscripten::function("setCardBuffer", &setCardBuffer);
+    emscripten::function("getCardBuffer", &getCardBuffer);
+    emscripten::function("generateCardBuffer", &generateCardBuffer);
     emscripten::function("setCardSpecs", &setCardSpecs);
     emscripten::function("setCardChanged", &mcfat_setCardChanged);
 

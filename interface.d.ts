@@ -80,8 +80,9 @@ export const sceMcFileAttrHidden = 0x2000;
 export const sceMcFileAttrExists = 0x8000;
 
 export interface Module {
-  setBuffer(buffer: Uint8Array): void;
-  getBuffer(): Array<number>;
+  setCardBuffer(buffer: Uint8Array): void;
+  getCardBuffer(): Array<number>;
+  generateCardBuffer(): void;
   setCardSpecs(specs: McFatCardSpecs): void;
   setCardChanged(v: boolean): void;
 
