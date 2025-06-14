@@ -1,3 +1,4 @@
+#include <cstring>
 #include <emscripten/emscripten.h>
 #include <emscripten/bind.h>
 
@@ -224,6 +225,13 @@ int deleteDirectory(std::string dirname) {
     return mcio_mcRmDir(dirname.data());
 }
 
+int setInfo(int fd, io_stat stat, std::string name, int flags) {
+    io_dirent info = {};
+    info.stat = stat;
+    strncpy(info.name, name.data(), 32);
+    return mcio_mcSetInfo(fd, &info, flags);
+}
+
 EMSCRIPTEN_BINDINGS(mcfs) {
     // mcfat
     emscripten::value_object<mcfat_cardspecs_t>("McFatCardSpecs")
@@ -265,6 +273,7 @@ EMSCRIPTEN_BINDINGS(mcfs) {
     emscripten::function("format", &mcio_mcFormat);
     emscripten::function("remove", &deleteFile);
     emscripten::function("rmDir", &deleteDirectory);
+    emscripten::function("setInfo", &setInfo);
 
     // returns status code (if <0) or data (if >=0)
     emscripten::function("open", &openFile);

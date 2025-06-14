@@ -21,7 +21,7 @@ export type McIoStat = {
   size: number,
   ctime: McStDateTime,
   mtime: McStDateTime,
-};
+}
 
 export type McDirEntry = {
   hasMore: boolean,
@@ -84,6 +84,8 @@ export const CF_USE_ECC = 0x01
 export const CF_BAD_BLOCK = 0x08
 export const CF_ERASE_ZEROES = 0x10
 
+export const mcFileUpdateName: number;
+
 export interface Module {
   setCardBuffer(buffer: Uint8Array): void;
   getCardBuffer(): Uint8Array;
@@ -95,11 +97,13 @@ export interface Module {
   detect(): McReturnCode;
   close(fd: McFileHandle): McReturnCode;
   createCrossLinkedFile(realFilePath: string, dummyFilePath: string): McReturnCode;
-  dclose(_fd: McFileHandle): McReturnCode;
+  dclose(fd: McFileHandle): McReturnCode;
   unformat(): McReturnCode;
   format(): McReturnCode;
   remove(fileName: string): McReturnCode;
   rmDir(dirName: string): McReturnCode;
+  /** `sceMcFileAttrFile` - sets name, does NOT check if file/directory with same name already exists */
+  setInfo(fd: McFileHandle, stat: McIoStat, name: string, flags: number): McReturnCode;
 
   open(fileName: string, flag: number): McReturnCode | McFileHandle;
   write(fd: McFileHandle, data: Uint8Array): McReturnCode | number;

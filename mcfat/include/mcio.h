@@ -71,6 +71,7 @@ int mcio_mcUnformat(void);
 int mcio_mcFormat(void);
 int mcio_mcRemove(char *filename);
 int mcio_mcRmDir(char *dirname);
+int mcio_mcSetInfo(int fd, struct io_dirent *info, int flags);
 
 /* MC error codes */
 #define sceMcResSucceed			 0
@@ -114,6 +115,9 @@ int mcio_mcRmDir(char *dirname);
 #define CF_USE_ECC			0x01
 #define CF_BAD_BLOCK			0x08
 #define CF_ERASE_ZEROES			0x10
+
+/* set info flags */
+#define mcFileUpdateName sceMcFileAttrFile
 
 #ifdef __cplusplus
 }

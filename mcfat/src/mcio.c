@@ -22,6 +22,7 @@
 #include "mcfat_internal.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #define MCIO_CLUSTERSIZE		1024
@@ -3260,12 +3261,11 @@ int mcio_mcCreateCrossLinkedFile(char *real_filepath, char *dummy_filepath)
     strncpy(dummy_filename, pfse->name, 32);
 
     int32_t cluster = Card_GetDirEntryCluster(fh->cluster, fh->fsindex);
-    if (r < 0) {
-        mcio_mcClose(fd);
-        return r;
+    mcio_mcClose(fd);
+    if (cluster < 0) {
+        return cluster;
     }
 
-    mcio_mcClose(fd);
 
     r = Card_ReadCluster(cluster, &pmce);
     if (r < 0)
@@ -3500,4 +3500,46 @@ int mcio_mcRmDir(char *dirname)
     }
 
     return r;
+}
+
+int mcio_mcSetInfo(int fd, struct io_dirent *info, int flags)
+{
+    if (!(fd < MAX_FDHANDLES))
+        return sceMcResDeniedPermit;
+
+    struct MCFHandle *fh = (struct MCFHandle *)&mcio_fdhandles[fd];
+    if (!fh->status)
+        return sceMcResDeniedPermit;
+
+    int32_t cluster = Card_GetDirEntryCluster(fh->cluster, fh->fsindex);
+    if (cluster < 0)
+        return cluster;
+
+    struct MCFsEntry *fse2;
+	int r = Card_ReadDirEntry(fh->cluster, fh->fsindex, &fse2);
+    if (r < 0)
+        return r;
+
+    struct MCCacheEntry *pmce;
+    r = Card_ReadCluster(cluster, &pmce);
+    if (r < 0)
+        return r;
+
+    struct MCFsEntry *fse = (struct MCFsEntry *)pmce->cl_data;
+    if (fse->cluster != fse2->cluster)
+        fse++;
+    if (fse->cluster != fse2->cluster)
+        return r;
+
+    if ((flags & mcFileUpdateName) != 0) {
+        strncpy(fse->name, info->name, 32);
+        fse->name[31] = 0;
+	}
+
+    pmce->wr_flag = 1;
+    r = Card_FlushMCCache();
+    if (r != sceMcResSucceed)
+        return r;
+
+    return sceMcResSucceed;
 }
