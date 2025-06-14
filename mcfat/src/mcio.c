@@ -3385,7 +3385,7 @@ int mcio_mcDread(int fd, struct io_dirent *dirent)
 
 int mcio_mcMkDir(char *dirname)
 {
-    return mcio_mcOpen(dirname, 0x40);
+    return mcio_mcOpen(dirname, sceMcFileCreateDir);
 }
 
 int mcio_mcGetInfo(int *pagesize, int *blocksize, int *cardsize, int *cardflags)
