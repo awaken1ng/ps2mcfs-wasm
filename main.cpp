@@ -225,11 +225,25 @@ int deleteDirectory(std::string dirname) {
     return mcio_mcRmDir(dirname.data());
 }
 
-int setInfo(int fd, io_stat stat, std::string name, int flags) {
+int setInfo(std::string filename, io_stat stat, std::string name, int flags) {
     io_dirent info = {};
     info.stat = stat;
     strncpy(info.name, name.data(), 32);
-    return mcio_mcSetInfo(fd, &info, flags);
+    return mcio_mcSetInfo(filename.data(), &info, flags);
+}
+
+emscripten::val stat(int fd) {
+    emscripten::val ret = emscripten::val::object();
+    io_dirent info = {};
+    int code = mcio_mcStat(fd, &info);
+    if (code < 0) {
+        ret.set("code", code);
+    } else {
+        ret.set("stat", info.stat);
+        ret.set("name", info.name);
+    }
+
+    return ret;
 }
 
 EMSCRIPTEN_BINDINGS(mcfs) {
@@ -289,4 +303,5 @@ EMSCRIPTEN_BINDINGS(mcfs) {
     emscripten::function("read", &readFile);
     emscripten::function("dread", &readDirectory);
     emscripten::function("readPage", &readPage);
+    emscripten::function("stat", &stat);
 }

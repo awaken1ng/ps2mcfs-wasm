@@ -23,10 +23,17 @@ export type McIoStat = {
   mtime: McStDateTime,
 }
 
-export type McDirEntry = {
-  hasMore: boolean,
+export type McEntryInfo = {
   stat: McIoStat,
   name: string,
+}
+
+export type McEntry = McEntryInfo & {
+  contents: Uint8Array,
+}
+
+export type McDirEntry = McEntryInfo & {
+  hasMore: boolean,
 }
 
 export type McReturnCode = number
@@ -43,6 +50,7 @@ export type McResultGetInfo = McResultCode | McFatCardSpecs
 export type McResultGetAvailableSpace = McResultCode | { availableSpace: number }
 export type McResultData = McResultCode | { data: Uint8Array }
 export type McResultReadDir = McResultCode | McDirEntry
+export type McResultStat = McResultCode | McEntryInfo
 
 export const sceMcResSucceed = 0
 export const sceMcResChangedCard = -1
@@ -85,6 +93,9 @@ export const CF_BAD_BLOCK = 0x08
 export const CF_ERASE_ZEROES = 0x10
 
 export const mcFileUpdateName: number;
+export const mcFileUpdateAttrCtime: number;
+export const mcFileUpdateAttrMtime: number;
+export const mcFileUpdateAttrMode: number;
 
 export interface Module {
   setCardBuffer(buffer: Uint8Array): void;
@@ -102,8 +113,11 @@ export interface Module {
   format(): McReturnCode;
   remove(fileName: string): McReturnCode;
   rmDir(dirName: string): McReturnCode;
-  /** `sceMcFileAttrFile` - sets name, does NOT check if file/directory with same name already exists */
-  setInfo(fd: McFileHandle, stat: McIoStat, name: string, flags: number): McReturnCode;
+  /** `mcFileUpdateName` - sets name, does NOT check if file/directory with same name already exists */
+  /** `mcFileUpdateAttrCtime` - sets create date */
+  /** `mcFileUpdateAttrMtime` - sets modified date */
+  /** `mcFileUpdateAttrMode` - sets attributes */
+  setInfo(fileName: string, stat: McIoStat, name: string, flags: number): McReturnCode;
 
   open(fileName: string, flag: number): McReturnCode | McFileHandle;
   write(fd: McFileHandle, data: Uint8Array): McReturnCode | number;
@@ -117,6 +131,7 @@ export interface Module {
   read(fd: McFileHandle, length: number): McResultData;
   dread(fd: McFileHandle): McResultReadDir;
   readPage(pageIdx: number): McResultData;
+  stat(fd: McFileHandle): McResultStat;
 }
 
 export default function createModule(options?: unknown): Promise<Module>

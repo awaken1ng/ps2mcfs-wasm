@@ -40,4 +40,7 @@ export const CF_USE_ECC = 0x01
 export const CF_BAD_BLOCK = 0x08
 export const CF_ERASE_ZEROES = 0x10
 
-export const mcFileUpdateName = sceMcFileAttrFile;
+export const mcFileUpdateName = sceMcFileAttrFile
+export const mcFileUpdateAttrCtime = sceMcFileAttrReadable
+export const mcFileUpdateAttrMtime = sceMcFileAttrWriteable
+export const mcFileUpdateAttrMode = 0x10000

@@ -3502,10 +3502,11 @@ int mcio_mcRmDir(char *dirname)
     return r;
 }
 
-int mcio_mcSetInfo(int fd, struct io_dirent *info, int flags)
+int mcio_mcSetInfo(char *filename, struct io_dirent *info, int flags)
 {
-    if (!(fd < MAX_FDHANDLES))
-        return sceMcResDeniedPermit;
+    int fd = mcio_mcOpen(filename, sceMcFileAttrSubdir | sceMcFileAttrReadable);
+    if (fd < 0)
+        return fd;
 
     struct MCFHandle *fh = (struct MCFHandle *)&mcio_fdhandles[fd];
     if (!fh->status)
@@ -3516,9 +3517,12 @@ int mcio_mcSetInfo(int fd, struct io_dirent *info, int flags)
         return cluster;
 
     struct MCFsEntry *fse2;
-	int r = Card_ReadDirEntry(fh->cluster, fh->fsindex, &fse2);
+    int r = Card_ReadDirEntry(fh->cluster, fh->fsindex, &fse2);
     if (r < 0)
         return r;
+
+    // close updates the mtime, to avoid overwriting it in case we're going to set it, close the file early
+    mcio_mcClose(fd);
 
     struct MCCacheEntry *pmce;
     r = Card_ReadCluster(cluster, &pmce);
@@ -3534,7 +3538,19 @@ int mcio_mcSetInfo(int fd, struct io_dirent *info, int flags)
     if ((flags & mcFileUpdateName) != 0) {
         strncpy(fse->name, info->name, 32);
         fse->name[31] = 0;
-	}
+    }
+
+    if ((flags & mcFileUpdateAttrCtime) != 0) {
+        memcpy(&fse->created, &info->stat.ctime, sizeof(struct sceMcStDateTime));
+    }
+
+    if ((flags & mcFileUpdateAttrMtime) != 0) {
+        memcpy(&fse->modified, &info->stat.mtime, sizeof(struct sceMcStDateTime));
+    }
+
+    if ((flags & mcFileUpdateAttrMode) != 0) {
+        fse->mode = info->stat.mode;
+    }
 
     pmce->wr_flag = 1;
     r = Card_FlushMCCache();
@@ -3542,4 +3558,26 @@ int mcio_mcSetInfo(int fd, struct io_dirent *info, int flags)
         return r;
 
     return sceMcResSucceed;
+}
+
+int mcio_mcStat(int fd, struct io_dirent *info)
+{
+    struct MCFHandle *fh = (struct MCFHandle *)&mcio_fdhandles[fd];
+
+    struct MCFsEntry *pfse;
+    int r = Card_ReadDirEntry(fh->cluster, fh->fsindex, &pfse);
+    if (r < 0) {
+        return r;
+    }
+
+    info->stat.mode = pfse->mode;
+    info->stat.attr = pfse->attr;
+    info->stat.size = pfse->length;
+    memcpy(&info->stat.ctime, &pfse->created, sizeof(struct sceMcStDateTime));
+    memcpy(&info->stat.mtime, &pfse->modified, sizeof(struct sceMcStDateTime));
+
+    strncpy(info->name, pfse->name, 32);
+    info->name[31] = 0;
+
+    return r;
 }
