@@ -120,7 +120,7 @@ emscripten::val getInfo() {
 
     emscripten::val ret = emscripten::val::object();
     if (code == sceMcResSucceed) {
-        emscripten::val data = emscripten::val().object();
+        emscripten::val data = emscripten::val::object();
         ret.set("pageSize", pagesize);
         ret.set("blockSize", blocksize);
         ret.set("cardSize", cardsize);
