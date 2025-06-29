@@ -345,12 +345,12 @@ static int Card_SetTerminationCode(void)
     return sceMcResSucceed;
 }
 
-static int Card_GetSpecs(uint16_t *pagesize, uint16_t *blocksize, int32_t *cardsize, uint8_t *flags)
+static int Card_GetSpecs(uint16_t *pagesize, uint16_t *blocksize, int32_t *cardpages, uint8_t *flags)
 {
     *flags = mcfat_cardspecs.flags;
     *pagesize = mcfat_cardspecs.pagesize;
     *blocksize = mcfat_cardspecs.blocksize;
-    *cardsize = mcfat_cardspecs.cardsize;
+    *cardpages = mcfat_cardspecs.cardpages;
 
     return sceMcResSucceed;
 }
@@ -429,11 +429,11 @@ static int Card_ReadPageData(int32_t page, uint8_t *pagebuf, uint8_t *eccbuf)
 
 static int Card_SetDeviceSpecs(void)
 {
-    int32_t cardsize;
+    int32_t cardpages;
     uint16_t blocksize, pages_per_cluster;
     struct MCDevInfo *mcdi = &mcio_devinfo;
 
-    if (Card_GetSpecs(&mcdi->pagesize, &mcdi->blocksize, &cardsize, &mcdi->cardflags) != sceMcResSucceed)
+    if (Card_GetSpecs(&mcdi->pagesize, &mcdi->blocksize, &cardpages, &mcdi->cardflags) != sceMcResSucceed)
         return sceMcResFullDevice;
 
     append_le_uint16((uint8_t *)&mcdi->pages_per_cluster, MCIO_CLUSTERSIZE / read_le_uint16((uint8_t *)&mcdi->pagesize));
@@ -447,7 +447,7 @@ static int Card_SetDeviceSpecs(void)
     blocksize = read_le_uint16((uint8_t *)&mcdi->blocksize);
     pages_per_cluster = read_le_uint16((uint8_t *)&mcdi->pages_per_cluster);
     append_le_uint32((uint8_t *)&mcdi->clusters_per_block,  blocksize / pages_per_cluster);
-    append_le_uint32((uint8_t *)&mcdi->clusters_per_card, (cardsize / blocksize) * (blocksize / pages_per_cluster));
+    append_le_uint32((uint8_t *)&mcdi->clusters_per_card, (cardpages / blocksize) * (blocksize / pages_per_cluster));
 
     return sceMcResSucceed;
 }
@@ -3388,7 +3388,7 @@ int mcio_mcMkDir(char *dirname)
     return mcio_mcOpen(dirname, sceMcFileCreateDir);
 }
 
-int mcio_mcGetInfo(int *pagesize, int *blocksize, int *cardsize, int *cardflags)
+int mcio_mcGetCardSpecs(int *pagesize, int *blocksize, int *cardsize, int *cardflags)
 {
     register int r;
 
@@ -3398,13 +3398,13 @@ int mcio_mcGetInfo(int *pagesize, int *blocksize, int *cardsize, int *cardflags)
 
     uint8_t _cardflags;
     uint16_t _pagesize, _blocksize;
-    int32_t _cardsize;
-    if (Card_GetSpecs(&_pagesize, &_blocksize, &_cardsize, &_cardflags) != sceMcResSucceed)
+    int32_t _cardpages;
+    if (Card_GetSpecs(&_pagesize, &_blocksize, &_cardpages, &_cardflags) != sceMcResSucceed)
         return r;
 
     *pagesize = (int)_pagesize;
     *blocksize = (int)_blocksize;
-    *cardsize = (int)_cardsize * _pagesize;
+    *cardsize = (int)_cardpages * _pagesize;
     *cardflags = (int)_cardflags;
 
     return 0;

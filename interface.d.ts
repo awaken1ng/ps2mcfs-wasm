@@ -1,7 +1,14 @@
-export type McFatCardSpecs = {
+export interface McFatGetCardSpecs {
   pageSize: number,
   blockSize: number,
   cardSize: number,
+  cardFlags: number,
+}
+
+export interface McFatSetCardSpecs {
+  pageSize: number,
+  blockSize: number,
+  cardPages: number,
   cardFlags: number,
 }
 
@@ -46,7 +53,7 @@ export enum SeekOrigin {
 }
 
 export type McResultCode = { code: number }
-export type McResultGetInfo = McResultCode | McFatCardSpecs
+export type McResultGetCardSpecs = McResultCode | McFatGetCardSpecs
 export type McResultGetAvailableSpace = McResultCode | { availableSpace: number }
 export type McResultData = McResultCode | { data: Uint8Array }
 export type McResultReadDir = McResultCode | McDirEntry
@@ -101,7 +108,7 @@ export interface Module {
   setCardBuffer(buffer: Uint8Array): void;
   getCardBuffer(): Uint8Array;
   generateCardBuffer(): void;
-  setCardSpecs(specs: McFatCardSpecs): void;
+  setCardSpecs(specs: McFatSetCardSpecs): void;
   setCardChanged(v: boolean): void;
 
   init(): McReturnCode;
@@ -126,7 +133,7 @@ export interface Module {
   dopen(dirName: string): McReturnCode | McFileHandle;
   mkDir(dirName: string): McReturnCode | McFileHandle;
 
-  getInfo(): McResultGetInfo;
+  getCardSpecs(): McResultGetCardSpecs;
   getAvailableSpace(): McResultGetAvailableSpace;
   read(fd: McFileHandle, length: number): McResultData;
   dread(fd: McFileHandle): McResultReadDir;

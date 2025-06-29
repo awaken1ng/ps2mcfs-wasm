@@ -114,9 +114,9 @@ void setCardSpecs(const mcfat_cardspecs_t cardspecs) {
     mcfat_setConfig(mcfat_mcops, cardspecs);
 }
 
-emscripten::val getInfo() {
+emscripten::val getCardSpecs() {
     int pagesize, blocksize, cardsize, cardflags;
-    int code = mcio_mcGetInfo(&pagesize, &blocksize, &cardsize, &cardflags);
+    int code = mcio_mcGetCardSpecs(&pagesize, &blocksize, &cardsize, &cardflags);
 
     emscripten::val ret = emscripten::val::object();
     if (code == sceMcResSucceed) {
@@ -200,7 +200,7 @@ int createDirectory(std::string dirname) {
 emscripten::val readPage(int pageIdx) {
     emscripten::val ret = emscripten::val::object();
     int pagesize, _blocksize, _cardsize, _cardflags;
-    int code = mcio_mcGetInfo(&pagesize, &_blocksize, &_cardsize, &_cardflags);
+    int code = mcio_mcGetCardSpecs(&pagesize, &_blocksize, &_cardsize, &_cardflags);
     if (code < 0) {
         ret.set("code", code);
         return ret;
@@ -251,7 +251,7 @@ EMSCRIPTEN_BINDINGS(mcfs) {
     emscripten::value_object<mcfat_cardspecs_t>("McFatCardSpecs")
         .field("pageSize", &mcfat_cardspecs_t::pagesize)
         .field("blockSize", &mcfat_cardspecs_t::blocksize)
-        .field("cardSize", &mcfat_cardspecs_t::cardsize)
+        .field("cardPages", &mcfat_cardspecs_t::cardpages)
         .field("cardFlags", &mcfat_cardspecs_t::flags);
 
     emscripten::function("setCardBuffer", &setCardBuffer);
@@ -298,7 +298,7 @@ EMSCRIPTEN_BINDINGS(mcfs) {
     emscripten::function("mkDir", &createDirectory);
 
     // returns object with status code or status code and data
-    emscripten::function("getInfo", &getInfo);
+    emscripten::function("getCardSpecs", &getCardSpecs);
     emscripten::function("getAvailableSpace", &getAvailableSpace);
     emscripten::function("read", &readFile);
     emscripten::function("dread", &readDirectory);

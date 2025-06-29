@@ -12,7 +12,7 @@ typedef struct _mcfat_cardspecs
 {
     uint16_t pagesize;
     uint16_t blocksize;
-    int32_t cardsize;
+    int32_t cardpages;
     uint8_t flags;
 } mcfat_cardspecs_t;
 

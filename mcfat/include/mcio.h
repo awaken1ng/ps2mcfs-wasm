@@ -53,7 +53,7 @@ struct io_dirent {
 void Card_DataChecksum(uint8_t *pagebuf, uint8_t *ecc);
 int mcio_init(void);
 int mcio_mcDetect(void);
-int mcio_mcGetInfo(int *pagesize, int *blocksize, int *cardsize, int *cardflags);
+int mcio_mcGetCardSpecs(int *pagesize, int *blocksize, int *cardsize, int *cardflags);
 int mcio_mcGetAvailableSpace(int *cardfree);
 int mcio_mcOpen(char *filename, int flag);
 int mcio_mcClose(int fd);
