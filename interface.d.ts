@@ -1,3 +1,8 @@
+export interface McGeneratedCardInfo {
+  superblock: Uint8Array,
+  isEccImage: boolean,
+}
+
 export interface McFatGetCardSpecs {
   pageSize: number,
   blockSize: number,
@@ -108,7 +113,7 @@ export const mcFileUpdateAttrMode: number;
 
 export interface Module {
   setCardBuffer(buffer: Uint8Array): void;
-  generateCardBuffer(): void;
+  generateCardBuffer(): McGeneratedCardInfo;
   setCardSpecs(specs: McFatSetCardSpecs): void;
   setCardChanged(v: boolean): void;
 

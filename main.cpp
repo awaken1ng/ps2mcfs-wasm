@@ -19,7 +19,7 @@ void setCardBuffer(emscripten::val v) {
     buffer = emscripten::convertJSArrayToNumberVector<uint8_t>(v);
 }
 
-void generateCardBuffer() {
+emscripten::val generateCardBuffer() {
     uint32_t cardSize = 8 * 1024 * 1024;
 
     buffer = std::vector<uint8_t>(); // deallocate the existing buffer first
@@ -29,6 +29,14 @@ void generateCardBuffer() {
         uint8_t *flushbuf = buffer.data() + pos;
         genblock(cardSize, pos, flushbuf);
     }
+
+    emscripten::val superblock = emscripten::val::array(buffer.begin(), buffer.begin() + BLOCK_SIZE);
+
+    emscripten::val ret = emscripten::val::object();
+    ret.set("superblock", emscripten::val::global("Uint8Array").new_(superblock));
+    ret.set("isEccImage", false);
+
+    return ret;
 }
 
 int page_erase(mcfat_cardspecs_t *specs, uint32_t page_idx) {
