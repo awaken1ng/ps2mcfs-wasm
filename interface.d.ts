@@ -56,6 +56,8 @@ export type McResultCode = { code: number }
 export type McResultGetCardSpecs = McResultCode | McFatGetCardSpecs
 export type McResultGetAvailableSpace = McResultCode | { availableSpace: number }
 export type McResultData = McResultCode | { data: Uint8Array }
+export type McResultPageDataWithoutEcc = McResultCode | { data: Uint8Array }
+export type McResultPageDataWithEcc = McResultCode | { data: Uint8Array, ecc: Uint8Array }
 export type McResultReadDir = McResultCode | McDirEntry
 export type McResultStat = McResultCode | McEntryInfo
 
@@ -106,7 +108,6 @@ export const mcFileUpdateAttrMode: number;
 
 export interface Module {
   setCardBuffer(buffer: Uint8Array): void;
-  getCardBuffer(): Uint8Array;
   generateCardBuffer(): void;
   setCardSpecs(specs: McFatSetCardSpecs): void;
   setCardChanged(v: boolean): void;
@@ -137,7 +138,9 @@ export interface Module {
   getAvailableSpace(): McResultGetAvailableSpace;
   read(fd: McFileHandle, length: number): McResultData;
   dread(fd: McFileHandle): McResultReadDir;
-  readPage(pageIdx: number): McResultData;
+  readPage(pageIdx: number, withEcc: true): McResultPageDataWithEcc;
+  readPage(pageIdx: number, withEcc: false): McResultPageDataWithoutEcc;
+  readPage(pageIdx: number, withEcc: boolean): McResultPageDataWithoutEcc | McResultPageDataWithEcc;
   stat(fd: McFileHandle): McResultStat;
 }
 

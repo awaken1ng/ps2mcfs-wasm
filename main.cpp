@@ -19,10 +19,6 @@ void setCardBuffer(emscripten::val v) {
     buffer = emscripten::convertJSArrayToNumberVector<uint8_t>(v);
 }
 
-emscripten::val getCardBuffer() {
-    return emscripten::val::global("Uint8Array").new_(emscripten::val::array(buffer));
-}
-
 void generateCardBuffer() {
     uint32_t cardSize = 8 * 1024 * 1024;
 
@@ -197,7 +193,7 @@ int createDirectory(std::string dirname) {
     return mcio_mcMkDir(dirname.data());
 }
 
-emscripten::val readPage(int pageIdx) {
+emscripten::val readPage(int pageIdx, bool withEcc) {
     emscripten::val ret = emscripten::val::object();
     int pagesize, _blocksize, _cardsize, _cardflags;
     int code = mcio_mcGetCardSpecs(&pagesize, &_blocksize, &_cardsize, &_cardflags);
@@ -206,12 +202,27 @@ emscripten::val readPage(int pageIdx) {
         return ret;
     }
 
+    emscripten::val uint8array = emscripten::val::global("Uint8Array");
     std::vector<uint8_t> page = std::vector<uint8_t>(pagesize);
-    code = mcio_mcReadPage(pageIdx, page.data());
-    if (code < 0) {
-        ret.set("code", code);
+
+    if (withEcc) {
+        std::vector<uint8_t> ecc = std::vector<uint8_t>(pagesize >> 5);
+        code = mcio_mcReadPage(pageIdx, page.data(), ecc.data());
+
+        if (code < 0) {
+            ret.set("code", code);
+        } else {
+            ret.set("data", uint8array.new_(emscripten::val::array(page)));
+            ret.set("ecc", uint8array.new_(emscripten::val::array(ecc)));
+        }
     } else {
-        ret.set("data", page);
+        code = mcio_mcReadPage(pageIdx, page.data(), NULL);
+
+        if (code < 0) {
+            ret.set("code", code);
+        } else {
+            ret.set("data", uint8array.new_(emscripten::val::array(page)));
+        }
     }
 
     return ret;
@@ -255,7 +266,6 @@ EMSCRIPTEN_BINDINGS(mcfs) {
         .field("cardFlags", &mcfat_cardspecs_t::flags);
 
     emscripten::function("setCardBuffer", &setCardBuffer);
-    emscripten::function("getCardBuffer", &getCardBuffer);
     emscripten::function("generateCardBuffer", &generateCardBuffer);
     emscripten::function("setCardSpecs", &setCardSpecs);
     emscripten::function("setCardChanged", &mcfat_setCardChanged);
