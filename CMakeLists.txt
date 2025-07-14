@@ -6,6 +6,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+
 add_subdirectory(mcfat)
 add_subdirectory(cardgen)
 
@@ -18,6 +21,6 @@ target_link_libraries(mcfs
         cardgen
 )
 
-set_target_properties(mcfs PROPERTIES LINK_FLAGS "-O3 -s WASM=1 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME=createModule --no-entry --extern-pre-js ${CMAKE_CURRENT_SOURCE_DIR}/extern-pre.js -s INITIAL_MEMORY=8912896 -s ALLOW_MEMORY_GROWTH=1 -s MEMORY_GROWTH_GEOMETRIC_STEP=1.0")
+set_target_properties(mcfs PROPERTIES LINK_FLAGS "-s WASM=1 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME=createModule --no-entry --extern-pre-js ${CMAKE_CURRENT_SOURCE_DIR}/extern-pre.js -s INITIAL_MEMORY=8912896 -s ALLOW_MEMORY_GROWTH=1 -s MEMORY_GROWTH_GEOMETRIC_STEP=1.0")
 
 configure_file(interface.d.ts mcfs.d.ts COPYONLY)
